@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aramko Market</title>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; color: #333; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        h1 { color: #6a0dad; }
+        button { background-color: #6a0dad; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+        button:hover { background-color: #4b087a; }
+        #user-info { margin-top: 20px; font-weight: bold; color: green; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>مرحباً بك في Aramko Market 🎉</h1>
+        <p>اضغط على الزر أدناه لتسجيل الدخول بحساب Pi الخاص بك.</p>
+        
+        <button id="login-btn">تسجيل الدخول باستخدام Pi</button>
+        <div id="user-info"></div>
+    </div>
+
+    <script>
+        Pi.init({ version: "2.0", sandbox: true });
+
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            alert("جاري الاتصال بشبكة Pi...");
+            try {
+                const auth = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
+                alert("تم تسجيل الدخول بنجاح!");
+                document.getElementById('user-info').innerText = "أهلاً بك يا " + auth.user.username + "!";
+                document.getElementById('login-btn').style.display = 'none';
+            } catch (error) {
+                alert("حدث خطأ: " + error.message);
+                console.error("فشل تسجيل الدخول:", error);
+            }
+        });
+
+        function onIncompletePaymentFound(payment) {
+            console.log("دفعة غير مكتملة:", payment);
+        }
+    </script>
+</body>
+</html>
