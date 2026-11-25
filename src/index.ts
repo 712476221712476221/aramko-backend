@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -10,6 +8,7 @@ import { MongoClient } from "mongodb";
 import env from "./environments";
 import mountPaymentsEndpoints from "./handlers/payments";
 import mountUserEndpoints from "./handlers/users";
+import mountListingEndpoints from "./handlers/listings";
 
 // We must import typedefs for ts-node-dev to pick them up when they change (even though tsc would supposedly
 // have no problem here)
@@ -18,14 +17,16 @@ import "./types/session";
 import mountNotificationEndpoints from "./handlers/notifications";
 
 const dbName = env.mongo_db_name;
-const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
-const mongoClientOptions = {
-  authSource: "admin",
-  auth: {
-    username: env.mongo_user,
-    password: env.mongo_password,
-  },
-};
+const mongoUri = env.mongo_uri || `mongodb://${env.mongo_host}/${dbName}`;
+const mongoClientOptions = env.mongo_uri
+  ? {}
+  : {
+      authSource: "admin",
+      auth: {
+        username: env.mongo_user,
+        password: env.mongo_password,
+      },
+    };
 
 //
 // I. Initialize and set up the express app and various middlewares and packages:
@@ -35,13 +36,6 @@ const app: express.Application = express();
 
 // Log requests to the console in a compact format:
 app.use(logger("dev"));
-
-// Full log of all requests to /log/access.log:
-app.use(
-  logger("common", {
-    stream: fs.createWriteStream(path.join(__dirname, "..", "log", "access.log"), { flags: "a" }),
-  }),
-);
 
 // Enable response bodies to be sent as JSON:
 app.use(express.json());
@@ -91,6 +85,10 @@ const notificationRouter = express.Router();
 mountNotificationEndpoints(notificationRouter);
 app.use("/notifications", notificationRouter);
 
+const listingRouter = express.Router();
+mountListingEndpoints(listingRouter);
+app.use("/listings", listingRouter);
+
 // Hello World page to check everything works:
 app.get("/", async (_, res) => {
   res.status(200).send({ message: "Hello, World!" });
@@ -103,10 +101,11 @@ const start = async () => {
     const client = await MongoClient.connect(mongoUri, mongoClientOptions);
     const db = client.db(dbName);
     app.locals.orderCollection = db.collection("orders");
+    app.locals.listingCollection = db.collection("listings");
     app.locals.userCollection = db.collection("users");
-    console.log("Connected to MongoDB on: ", mongoUri);
+    console.log("Connected to MongoDB successfully.");
 
-    app.listen(env.port, () => {
+    app.listen(env.port, "0.0.0.0", () => {
       console.log(`App platform demo app - Backend listening on port ${env.port}!`);
       console.log(`CORS config: configured to respond to a frontend hosted on ${env.frontend_url}`);
     });

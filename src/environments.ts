@@ -19,6 +19,7 @@ interface Environment {
   session_secret: string;
   pi_api_key: string;
   platform_api_url: string;
+  mongo_uri: string;
   mongo_host: string;
   mongo_db_name: string;
   mongo_user: string;
@@ -26,11 +27,18 @@ interface Environment {
   frontend_url: string;
 }
 
+const sessionSecret = process.env.SESSION_SECRET || "";
+
+if (process.env.NODE_ENV === "production" && sessionSecret.length < 32) {
+  throw new Error("Production requires a SESSION_SECRET of at least 32 characters.");
+}
+
 const env: Environment = {
   port: parseInt(process.env.PORT || "8000"),
-  session_secret: process.env.SESSION_SECRET || "This is my session secret",
+  session_secret: sessionSecret || "This is my session secret",
   pi_api_key: process.env.PI_API_KEY || "",
   platform_api_url: process.env.PLATFORM_API_URL || "",
+  mongo_uri: process.env.MONGODB_URI || "",
   mongo_host: process.env.MONGO_HOST || "localhost:27017",
   mongo_db_name: process.env.MONGODB_DATABASE_NAME || "demo-app",
   mongo_user: process.env.MONGODB_USERNAME || "",
