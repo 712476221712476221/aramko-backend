@@ -1,0 +1,10 @@
+node_modules/
+data/
+log/
+build/
+audit-report.json
+
+# Private environment files
+.env
+.env.*
+!.env.example
